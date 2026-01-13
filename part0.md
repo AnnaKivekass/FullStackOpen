@@ -1,3 +1,4 @@
+## 0.4
 ```mermaid
 sequenceDiagram
     participant browser
