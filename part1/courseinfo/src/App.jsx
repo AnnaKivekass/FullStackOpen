@@ -44,12 +44,12 @@ const App = () => {
     parts: [
       {
         name: 'Fundamentals of React',
-        exercises: 10,
+        exercises: 1,
         id: 1
       },
       {
         name: 'Using props to pass data',
-        exercises: 7,
+        exercises: 70,
         id: 2
       },
       {
