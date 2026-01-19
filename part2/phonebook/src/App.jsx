@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import personService from './services/persons'
+import Notification from './components/Notification'
 
 const Filter = ({ filter, handleFilterChange }) => (
   <div>
@@ -45,12 +46,20 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [notification, setNotification] = useState(null)
 
   useEffect(() => {
     personService.getAll().then((response) => {
       setPersons(response.data)
     })
   }, [])
+
+  const notify = (message, type = 'success') => {
+  setNotification({ message, type })
+  setTimeout(() => {
+    setNotification(null)
+  }, 3000)
+}
 
   const handleNameChange = (event) => setNewName(event.target.value)
   const handleNumberChange = (event) => setNewNumber(event.target.value)
@@ -75,6 +84,7 @@ const App = () => {
         )
         setNewName('')
         setNewNumber('')
+        notify(`Updated ${response.data.name}`)
       })
 
       return
@@ -89,6 +99,7 @@ const App = () => {
       setPersons(persons.concat(response.data))
       setNewName('')
       setNewNumber('')
+      notify(`Added ${response.data.name}`)
     })
   }
 
@@ -98,6 +109,7 @@ const App = () => {
 
     personService.remove(id).then(() => {
       setPersons(persons.filter((p) => p.id !== id))
+      notify(`Deleted ${name}`)
     })
   }
 
@@ -111,6 +123,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+
+      <Notification notification={notification} />
 
       <Filter filter={filter} handleFilterChange={handleFilterChange} />
 
