@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import personService from './services/persons'
 
 const Filter = ({ filter, handleFilterChange }) => (
   <div>
@@ -44,7 +44,7 @@ const App = () => {
   const [filter, setFilter] = useState('')
 
   useEffect(() => {
-    axios.get('http://localhost:3001/persons').then((response) => {
+    personService.getAll().then((response) => {
       setPersons(response.data)
     })
   }, [])
@@ -53,6 +53,7 @@ const App = () => {
   const handleNumberChange = (event) => setNewNumber(event.target.value)
   const handleFilterChange = (event) => setFilter(event.target.value)
 
+  // ✅ AINOA MUUTOS: lisäys synkronoidaan serverille
   const addPerson = (event) => {
     event.preventDefault()
 
@@ -64,19 +65,22 @@ const App = () => {
 
     const personObject = {
       name: newName,
-      number: newNumber,
-      id: String(persons.length + 1)
+      number: newNumber
     }
 
-    setPersons(persons.concat(personObject))
-    setNewName('')
-    setNewNumber('')
+    personService.create(personObject).then((response) => {
+      setPersons(persons.concat(response.data))
+      setNewName('')
+      setNewNumber('')
+    })
   }
 
   const personsToShow =
     filter === ''
       ? persons
-      : persons.filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()))
+      : persons.filter((p) =>
+          p.name.toLowerCase().includes(filter.toLowerCase())
+        )
 
   return (
     <div>
