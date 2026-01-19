@@ -27,11 +27,14 @@ const PersonForm = ({
   </form>
 )
 
-const Persons = ({ persons }) => (
+const Persons = ({ persons, handleDelete }) => (
   <div>
     {persons.map((person) => (
       <div key={person.id}>
-        {person.name} {person.number}
+        {person.name} {person.number}{' '}
+        <button onClick={() => handleDelete(person.id, person.name)}>
+          delete
+        </button>
       </div>
     ))}
   </div>
@@ -53,7 +56,6 @@ const App = () => {
   const handleNumberChange = (event) => setNewNumber(event.target.value)
   const handleFilterChange = (event) => setFilter(event.target.value)
 
-  // ✅ AINOA MUUTOS: lisäys synkronoidaan serverille
   const addPerson = (event) => {
     event.preventDefault()
 
@@ -72,6 +74,15 @@ const App = () => {
       setPersons(persons.concat(response.data))
       setNewName('')
       setNewNumber('')
+    })
+  }
+
+  const handleDelete = (id, name) => {
+    const ok = window.confirm(`Delete ${name} ?`)
+    if (!ok) return
+
+    personService.remove(id).then(() => {
+      setPersons(persons.filter((p) => p.id !== id))
     })
   }
 
@@ -100,7 +111,7 @@ const App = () => {
 
       <h3>Numbers</h3>
 
-      <Persons persons={personsToShow} />
+      <Persons persons={personsToShow} handleDelete={handleDelete} />
     </div>
   )
 }
