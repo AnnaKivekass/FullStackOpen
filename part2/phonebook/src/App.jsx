@@ -55,11 +55,11 @@ const App = () => {
   }, [])
 
   const notify = (message, type = 'success') => {
-  setNotification({ message, type })
-  setTimeout(() => {
-    setNotification(null)
-  }, 3000)
-}
+    setNotification({ message, type })
+    setTimeout(() => {
+      setNotification(null)
+    }, 3000)
+  }
 
   const handleNameChange = (event) => setNewName(event.target.value)
   const handleNumberChange = (event) => setNewNumber(event.target.value)
@@ -78,14 +78,25 @@ const App = () => {
 
       const changedPerson = { ...existingPerson, number: newNumber }
 
-      personService.update(existingPerson.id, changedPerson).then((response) => {
-        setPersons(
-          persons.map((p) => (p.id !== existingPerson.id ? p : response.data))
-        )
-        setNewName('')
-        setNewNumber('')
-        notify(`Updated ${response.data.name}`)
-      })
+      personService
+        .update(existingPerson.id, changedPerson)
+        .then((response) => {
+          setPersons((prev) =>
+            prev.map((p) => (p.id !== existingPerson.id ? p : response.data))
+          )
+          setNewName('')
+          setNewNumber('')
+          notify(`Updated ${response.data.name}`, 'success')
+        })
+        .catch(() => {
+          notify(
+            `Information of ${existingPerson.name} has already been removed from server`,
+            'error'
+          )
+          setPersons((prev) =>
+            prev.filter((p) => p.id !== existingPerson.id)
+          )
+        })
 
       return
     }
@@ -107,10 +118,19 @@ const App = () => {
     const ok = window.confirm(`Delete ${name} ?`)
     if (!ok) return
 
-    personService.remove(id).then(() => {
-      setPersons(persons.filter((p) => p.id !== id))
-      notify(`Deleted ${name}`)
-    })
+    personService
+      .remove(id)
+      .then(() => {
+        setPersons((prev) => prev.filter((p) => p.id !== id))
+        notify(`Deleted ${name}`, 'success')
+      })
+      .catch(() => {
+        notify(
+          `Information of ${name} has already been removed from server`,
+          'error'
+        )
+        setPersons((prev) => prev.filter((p) => p.id !== id))
+      })
   }
 
   const personsToShow =
