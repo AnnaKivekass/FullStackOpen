@@ -1,6 +1,38 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
+const Weather = ({ capital }) => {
+  const [weather, setWeather] = useState(null)
+  const apiKey = import.meta.env.VITE_OWM_KEY
+
+  useEffect(() => {
+    if (!capital) return
+
+    const url =
+      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(capital)}&appid=${apiKey}&units=metric`
+
+    axios.get(url).then((response) => {
+      setWeather(response.data)
+    })
+  }, [capital, apiKey])
+
+  if (!weather) return <div>Loading weather...</div>
+
+  const temp = weather.main?.temp
+  const wind = weather.wind?.speed
+  const icon = weather.weather?.[0]?.icon
+  const iconUrl = icon ? `https://openweathermap.org/img/wn/${icon}@2x.png` : null
+
+  return (
+    <div>
+      <h3>Weather in {capital}</h3>
+      <div>temperature {temp} Celsius</div>
+      {iconUrl && <img src={iconUrl} alt="weather icon" />}
+      <div>wind {wind} m/s</div>
+    </div>
+  )
+}
+
 const Country = ({ country }) => {
   if (!country) return null
 
@@ -14,8 +46,7 @@ const Country = ({ country }) => {
       <div>capital {capital}</div>
       <div>area {country.area}</div>
 
-      <h3>languages:</h3>touch .env.local
-
+      <h3>languages:</h3>
       <ul>
         {languages.map((lang) => (
           <li key={lang}>{lang}</li>
@@ -29,6 +60,8 @@ const Country = ({ country }) => {
           width="150"
         />
       )}
+
+      <Weather capital={capital} />
     </div>
   )
 }
@@ -91,3 +124,4 @@ const App = () => {
 }
 
 export default App
+
