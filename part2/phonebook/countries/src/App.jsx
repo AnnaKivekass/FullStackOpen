@@ -35,6 +35,7 @@ const Country = ({ country }) => {
 const App = () => {
   const [countries, setCountries] = useState([])
   const [filter, setFilter] = useState('')
+  const [selectedCountry, setSelectedCountry] = useState(null)
 
   useEffect(() => {
     axios
@@ -46,6 +47,7 @@ const App = () => {
 
   const handleFilterChange = (event) => {
     setFilter(event.target.value)
+    setSelectedCountry(null)
   }
 
   const countriesToShow =
@@ -69,11 +71,18 @@ const App = () => {
         {countriesToShow.length <= 10 &&
           countriesToShow.length > 1 &&
           countriesToShow.map((c) => (
-            <div key={c.cca3}>{c.name.common}</div>
+            <div key={c.cca3}>
+              {c.name.common}{' '}
+              <button onClick={() => setSelectedCountry(c)}>show</button>
+            </div>
           ))}
 
         {countriesToShow.length === 1 && (
           <Country country={countriesToShow[0]} />
+        )}
+
+        {selectedCountry && (
+          <Country country={selectedCountry} />
         )}
       </div>
     </div>
