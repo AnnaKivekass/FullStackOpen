@@ -1,8 +1,27 @@
-### lista kaikki
+### listaa kaikki henkilöt
 GET http://localhost:3001/api/persons
 
-### poista id 2
+###
+
+### hae yksittäinen henkilö
+GET http://localhost:3001/api/persons/1
+
+###
+
+### poista henkilö (id 2)
 DELETE http://localhost:3001/api/persons/2
 
-## poista id 3
+###
+
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+  "name": "Uusi Tyyppi",
+  "number": "040-9999999"
+}
+
+###
+
+### tarkista lista uudelleen
 GET http://localhost:3001/api/persons

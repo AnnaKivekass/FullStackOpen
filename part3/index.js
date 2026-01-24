@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+app.use(express.json())
 
 let persons = [
   { id: '1', name: 'Arto Hellas', number: '040-123456' },
@@ -41,6 +42,35 @@ app.delete('/api/persons/:id', (req, res) => {
   const id = req.params.id
   persons = persons.filter(p => p.id !== id)
   res.status(204).end()
+})
+
+const generateId = () => {
+  return String(Math.floor(Math.random() * 100000000000000))
+}
+
+app.post('/api/persons', (req, res) => {
+  const body = req.body
+
+  if (!body) {
+    return res.status(400).json({ error: 'request body missing' })
+  }
+
+  if (!body.name) {
+    return res.status(400).json({ error: 'name missing' })
+  }
+
+  if (!body.number) {
+    return res.status(400).json({ error: 'number missing' })
+  }
+
+  const newPerson = {
+    id: generateId(),
+    name: body.name,
+    number: body.number
+  }
+
+  persons = persons.concat(newPerson)
+  res.json(newPerson)
 })
 
 const PORT = 3001
