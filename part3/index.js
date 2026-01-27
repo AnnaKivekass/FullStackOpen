@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+
 app.use(express.json())
 
 let persons = [
@@ -8,6 +9,8 @@ let persons = [
   { id: '3', name: 'Dan Abramov', number: '12-43-234345' },
   { id: '4', name: 'Mary Poppendieck', number: '39-23-6423122' }
 ]
+
+const generateId = () => String(Math.floor(Math.random() * 1000000000))
 
 app.get('/', (req, res) => {
   res.send('<h1>Hello World!</h1>')
@@ -44,23 +47,20 @@ app.delete('/api/persons/:id', (req, res) => {
   res.status(204).end()
 })
 
-const generateId = () => {
-  return String(Math.floor(Math.random() * 100000000000000))
-}
-
 app.post('/api/persons', (req, res) => {
   const body = req.body
 
-  if (!body) {
-    return res.status(400).json({ error: 'request body missing' })
-  }
-
-  if (!body.name) {
+  if (!body || !body.name) {
     return res.status(400).json({ error: 'name missing' })
   }
 
   if (!body.number) {
     return res.status(400).json({ error: 'number missing' })
+  }
+
+  const nameExists = persons.some(p => p.name === body.name)
+  if (nameExists) {
+    return res.status(400).json({ error: 'name must be unique' })
   }
 
   const newPerson = {
