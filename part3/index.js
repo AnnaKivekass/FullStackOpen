@@ -1,7 +1,10 @@
 const express = require('express')
 const app = express()
+const morgan = require('morgan')
 
 app.use(express.json())
+app.use(morgan('tiny'))
+
 
 let persons = [
   { id: '1', name: 'Arto Hellas', number: '040-123456' },
@@ -42,6 +45,7 @@ app.get('/api/persons/:id', (req, res) => {
 })
 
 app.delete('/api/persons/:id', (req, res) => {
+  console.log('DELETE id:', req.params.id)
   const id = req.params.id
   persons = persons.filter(p => p.id !== id)
   res.status(204).end()
