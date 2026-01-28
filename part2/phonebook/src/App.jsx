@@ -49,8 +49,8 @@ const App = () => {
   const [notification, setNotification] = useState(null)
 
   useEffect(() => {
-    personService.getAll().then((response) => {
-      setPersons(response.data)
+    personService.getAll().then((initialPersons) => {
+      setPersons(initialPersons)
     })
   }, [])
 
@@ -71,33 +71,7 @@ const App = () => {
     const existingPerson = persons.find((p) => p.name === newName)
 
     if (existingPerson) {
-      const ok = window.confirm(
-        `${newName} is already added to phonebook, replace the old number with a new one?`
-      )
-      if (!ok) return
-
-      const changedPerson = { ...existingPerson, number: newNumber }
-
-      personService
-        .update(existingPerson.id, changedPerson)
-        .then((response) => {
-          setPersons((prev) =>
-            prev.map((p) => (p.id !== existingPerson.id ? p : response.data))
-          )
-          setNewName('')
-          setNewNumber('')
-          notify(`Updated ${response.data.name}`, 'success')
-        })
-        .catch(() => {
-          notify(
-            `Information of ${existingPerson.name} has already been removed from server`,
-            'error'
-          )
-          setPersons((prev) =>
-            prev.filter((p) => p.id !== existingPerson.id)
-          )
-        })
-
+      notify(`${newName} is already added to phonebook`, 'error')
       return
     }
 
@@ -106,12 +80,18 @@ const App = () => {
       number: newNumber
     }
 
-    personService.create(personObject).then((response) => {
-      setPersons(persons.concat(response.data))
-      setNewName('')
-      setNewNumber('')
-      notify(`Added ${response.data.name}`)
-    })
+    personService
+      .create(personObject)
+      .then((createdPerson) => {
+        setPersons(persons.concat(createdPerson))
+        setNewName('')
+        setNewNumber('')
+        notify(`Added ${createdPerson.name}`, 'success')
+      })
+      .catch((err) => {
+        const msg = err?.response?.data?.error || 'Failed to add person'
+        notify(msg, 'error')
+      })
   }
 
   const handleDelete = (id, name) => {
