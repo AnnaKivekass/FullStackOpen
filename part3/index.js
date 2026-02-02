@@ -1,8 +1,11 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
 const path = require('path')
+const Person = require('./models/person')
+
 
 app.use(express.json())
 app.use(cors())
@@ -26,7 +29,9 @@ let persons = [
 const generateId = () => String(Math.floor(Math.random() * 1000000000))
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons)
+  Person.find({}).then(persons => {
+    res.json(persons)
+  })
 })
 
 app.get('/info', (req, res) => {
@@ -37,10 +42,6 @@ app.get('/info', (req, res) => {
     <p>Phonebook has info for ${count} people</p>
     <p>${now}</p>
   `)
-})
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
 
 app.get('/api/persons/:id', (req, res) => {
@@ -85,6 +86,10 @@ app.post('/api/persons', (req, res) => {
 
   persons = persons.concat(newPerson)
   res.json(newPerson)
+})
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
 
 const PORT = process.env.PORT || 3001
