@@ -62,6 +62,10 @@ app.post('/api/persons', (req, res, next) => {
     .catch(next)
 })
 
+app.use('/api', (req, res) => {
+  res.status(404).send({ error: 'unknown endpoint' })
+})
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
