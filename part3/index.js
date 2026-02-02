@@ -49,6 +49,23 @@ app.delete('/api/persons/:id', (req, res, next) => {
     .catch(next)
 })
 
+app.put('/api/persons/:id', (req, res, next) => {
+  const { name, number } = req.body
+
+  const person = { name, number }
+
+  Person.findByIdAndUpdate(req.params.id, person, {
+    new: true,
+    runValidators: true,
+    context: 'query'
+  })
+    .then(updatedPerson => {
+      if (!updatedPerson) return res.status(404).end()
+      res.json(updatedPerson)
+    })
+    .catch(next)
+})
+
 app.post('/api/persons', (req, res, next) => {
   const { name, number } = req.body
 
