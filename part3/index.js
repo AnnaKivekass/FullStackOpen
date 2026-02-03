@@ -1,4 +1,5 @@
 require('dotenv').config()
+
 const express = require('express')
 const app = express()
 const morgan = require('morgan')
@@ -10,6 +11,7 @@ require('./mongo')
 
 app.use(express.json())
 app.use(cors())
+
 app.use(express.static('dist'))
 
 morgan.token('body', (req) => JSON.stringify(req.body))
@@ -80,12 +82,13 @@ app.post('/api/persons', (req, res, next) => {
     .catch(next)
 })
 
-app.use('/api', (req, res) => {
-  res.status(404).send({ error: 'unknown endpoint' })
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next()
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'))
+app.use((req, res) => {
+  res.status(404).send({ error: 'unknown endpoint' })
 })
 
 const errorHandler = (error, req, res, next) => {
