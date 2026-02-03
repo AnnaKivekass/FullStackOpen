@@ -1,11 +1,9 @@
 require('dotenv').config()
-const express = require('express')
+
+const app = require('./app')
 const mongoose = require('mongoose')
 const Blog = require('./models/blog')
 console.log('typeof Blog:', typeof Blog)
-
-const app = express()
-app.use(express.json())
 
 const mongoUrl = process.env.MONGODB_URI
 
