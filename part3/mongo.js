@@ -1,80 +1,22 @@
 const mongoose = require('mongoose')
 
-if (process.argv.length < 3) {
-  console.log('give password as argument')
+mongoose.set('strictQuery', false)
+
+const url = process.env.MONGODB_URI
+
+if (!url) {
+  console.log('MONGODB_URI missing')
   process.exit(1)
 }
 
-const password = process.argv[2]
+console.log('connecting to MongoDB')
 
-const url = `mongodb+srv://annakivekas_db_user:${password}@cluster0.sk5nllk.mongodb.net/phonebookApp?retryWrites=true&w=majority`
-
-mongoose.set('strictQuery', false)
-
-mongoose.connect(url)
+mongoose
+  .connect(url)
   .then(() => {
     console.log('connected to MongoDB')
-
-    if (process.argv.length === 3) {
-      console.log('phonebook:')
-      return Person.find({}).then(persons => {
-        persons.forEach(p => console.log(`${p.name} ${p.number}`))
-        mongoose.connection.close()
-      })
-    }
-
-    if (process.argv.length === 5) {
-      const name = process.argv[3]
-      const number = process.argv[4]
-      const person = new Person({ name, number })
-
-      return person.save().then(() => {
-        console.log(`added ${name} number ${number} to phonebook`)
-        mongoose.connection.close()
-      })
-    }
-
-    console.log('usage: node mongo.js <password> [name] [number]')
-    mongoose.connection.close()
   })
-  .catch(err => {
-    console.log('error connecting to MongoDB:', err.message)
-    process.exit(1)
-  })
-
-
   .catch((error) => {
     console.log('error connecting to MongoDB:', error.message)
     process.exit(1)
   })
-
-
-const personSchema = new mongoose.Schema({
-  name: String,
-  number: String,
-})
-
-const Person = mongoose.model('Person', personSchema)
-
-if (process.argv.length === 3) {
-  console.log('phonebook:')
-
-  Person.find({}).then(persons => {
-    persons.forEach(p => {
-      console.log(`${p.name} ${p.number}`)
-    })
-    mongoose.connection.close()
-  })
-}
-
-if (process.argv.length === 5) {
-  const name = process.argv[3]
-  const number = process.argv[4]
-
-  const person = new Person({ name, number })
-
-  person.save().then(() => {
-    console.log(`added ${name} number ${number} to phonebook`)
-    mongoose.connection.close()
-  })
-}

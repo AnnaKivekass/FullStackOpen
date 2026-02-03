@@ -1,23 +1,15 @@
 const mongoose = require('mongoose')
 
-mongoose.set('strictQuery', false)
-
-const url = process.env.MONGODB_URI
-
-console.log('connecting to', url ? '[MONGODB_URI set]' : '[MONGODB_URI missing]')
-
-mongoose
-  .connect(url)
-  .then(() => {
-    console.log('connected to MongoDB')
-  })
-  .catch((error) => {
-    console.log('error connecting to MongoDB:', error.message)
-  })
-
 const personSchema = new mongoose.Schema({
-  name: String,
-  number: String,
+  name: {
+    type: String,
+    required: true,
+    minLength: 3
+  },
+  number: {
+    type: String,
+    required: true
+  }
 })
 
 personSchema.set('toJSON', {
@@ -25,7 +17,7 @@ personSchema.set('toJSON', {
     returnedObject.id = returnedObject._id.toString()
     delete returnedObject._id
     delete returnedObject.__v
-  },
+  }
 })
 
 module.exports = mongoose.model('Person', personSchema)

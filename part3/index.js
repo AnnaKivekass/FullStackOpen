@@ -4,7 +4,9 @@ const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
 const path = require('path')
+
 const Person = require('./models/person')
+require('./mongo')
 
 app.use(express.json())
 app.use(cors())
@@ -51,7 +53,6 @@ app.delete('/api/persons/:id', (req, res, next) => {
 
 app.put('/api/persons/:id', (req, res, next) => {
   const { name, number } = req.body
-
   const person = { name, number }
 
   Person.findByIdAndUpdate(req.params.id, person, {
@@ -98,7 +99,7 @@ const errorHandler = (error, req, res, next) => {
     return res.status(400).json({ error: error.message })
   }
 
-  next(error)
+  return res.status(500).json({ error: 'internal server error' })
 }
 
 app.use(errorHandler)
