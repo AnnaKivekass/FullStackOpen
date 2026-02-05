@@ -30,6 +30,14 @@ describe('GET /api/blogs', () => {
   })
 })
 
+test('returned blogs have id field', async () => {
+  const response = await api.get('/api/blogs')
+  const blog = response.body[0]
+
+  assert.ok(blog.id)
+  assert.strictEqual(blog._id, undefined)
+})
+
 after(async () => {
   await mongoose.connection.close()
 })
