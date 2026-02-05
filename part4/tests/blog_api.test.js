@@ -21,23 +21,7 @@ describe('blog api', () => {
     await Blog.insertMany(initialBlogs)
   })
 
-test('if likes is missing, it defaults to 0', async () => {
-  const newBlog = {
-    title: 'no likes given',
-    author: 'someone',
-    url: 'https://example.com/nolikes'
-  }
-
-  const response = await api
-    .post('/api/blogs')
-    .send(newBlog)
-    .expect(201)
-    .expect('Content-Type', /application\/json/)
-
-  assert.strictEqual(response.body.likes, 0)
-})
-
-  test('returns correct amount of blogs as JSON', async () => {
+  test('GET /api/blogs returns correct amount of blogs as JSON', async () => {
     const response = await api
       .get('/api/blogs')
       .expect(200)
@@ -46,7 +30,7 @@ test('if likes is missing, it defaults to 0', async () => {
     assert.strictEqual(response.body.length, initialBlogs.length)
   })
 
-  test('returned blogs have id field', async () => {
+  test('returned blogs have id field (and not _id)', async () => {
     const response = await api.get('/api/blogs')
     const blog = response.body[0]
 
@@ -54,10 +38,10 @@ test('if likes is missing, it defaults to 0', async () => {
     assert.strictEqual(blog._id, undefined)
   })
 
-  test('returned blogs use id, not _id', async () => {
+  test('returned blogs use id, not _id (and __v is removed)', async () => {
     const response = await api.get('/api/blogs')
 
-    response.body.forEach(blog => {
+    response.body.forEach((blog) => {
       expect(blog.id).toBeDefined()
       expect(blog._id).toBeUndefined()
       expect(blog.__v).toBeUndefined()
@@ -83,7 +67,59 @@ test('if likes is missing, it defaults to 0', async () => {
     const blogsAtEnd = (await api.get('/api/blogs')).body
 
     assert.strictEqual(blogsAtEnd.length, blogsAtStart.length + 1)
-    assert(blogsAtEnd.map(b => b.title).includes(newBlog.title))
+    assert(blogsAtEnd.map((b) => b.title).includes(newBlog.title))
+  })
+
+  test('if likes is missing, it defaults to 0', async () => {
+    const newBlog = {
+      title: 'no likes given',
+      author: 'someone',
+      url: 'https://example.com/nolikes',
+    }
+
+    const response = await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    assert.strictEqual(response.body.likes, 0)
+  })
+
+  test('blog without title is rejected with 400', async () => {
+    const newBlog = {
+      author: 'No Title',
+      url: 'https://example.com/notitle',
+      likes: 5,
+    }
+
+    const blogsAtStart = (await api.get('/api/blogs')).body
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+
+    const blogsAtEnd = (await api.get('/api/blogs')).body
+    assert.strictEqual(blogsAtEnd.length, blogsAtStart.length)
+  })
+
+  test('blog without url is rejected with 400', async () => {
+    const newBlog = {
+      title: 'No URL',
+      author: 'Someone',
+      likes: 3,
+    }
+
+    const blogsAtStart = (await api.get('/api/blogs')).body
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+
+    const blogsAtEnd = (await api.get('/api/blogs')).body
+    assert.strictEqual(blogsAtEnd.length, blogsAtStart.length)
   })
 })
 
