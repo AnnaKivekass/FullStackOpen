@@ -1,5 +1,6 @@
 const { test, describe, beforeEach, after } = require('node:test')
 const assert = require('node:assert')
+const { default: expect } = require('expect')
 const supertest = require('supertest')
 
 const app = require('../app')
@@ -14,7 +15,7 @@ const initialBlogs = [
   { title: 'b', author: 'y', url: 'http://b', likes: 2 },
 ]
 
-describe('GET /api/blogs', () => {
+describe('blog api', () => {
   beforeEach(async () => {
     await Blog.deleteMany({})
     await Blog.insertMany(initialBlogs)
@@ -28,18 +29,48 @@ describe('GET /api/blogs', () => {
 
     assert.strictEqual(response.body.length, initialBlogs.length)
   })
-})
 
-test('returned blogs have id field', async () => {
-  const response = await api.get('/api/blogs')
-  const blog = response.body[0]
+  test('returned blogs have id field', async () => {
+    const response = await api.get('/api/blogs')
+    const blog = response.body[0]
 
-  assert.ok(blog.id)
-  assert.strictEqual(blog._id, undefined)
+    assert.ok(blog.id)
+    assert.strictEqual(blog._id, undefined)
+  })
+
+  test('returned blogs use id, not _id', async () => {
+    const response = await api.get('/api/blogs')
+
+    response.body.forEach(blog => {
+      expect(blog.id).toBeDefined()
+      expect(blog._id).toBeUndefined()
+      expect(blog.__v).toBeUndefined()
+    })
+  })
+
+  test('a valid blog can be added with POST /api/blogs', async () => {
+    const newBlog = {
+      title: 'async/await makes tests nicer',
+      author: 'Test Author',
+      url: 'https://example.com/await',
+      likes: 123,
+    }
+
+    const blogsAtStart = (await api.get('/api/blogs')).body
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAtEnd = (await api.get('/api/blogs')).body
+
+    assert.strictEqual(blogsAtEnd.length, blogsAtStart.length + 1)
+    assert(blogsAtEnd.map(b => b.title).includes(newBlog.title))
+  })
 })
 
 after(async () => {
   await mongoose.connection.close()
 })
-
-
