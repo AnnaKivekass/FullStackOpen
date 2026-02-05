@@ -123,6 +123,21 @@ describe('blog api', () => {
   })
 })
 
+test('a blog can be deleted with DELETE /api/blogs/:id', async () => {
+  const blogsAtStart = (await api.get('/api/blogs')).body
+  const blogToDelete = blogsAtStart[0]
+
+  await api
+    .delete(`/api/blogs/${blogToDelete.id}`)
+    .expect(204)
+
+  const blogsAtEnd = (await api.get('/api/blogs')).body
+  assert.strictEqual(blogsAtEnd.length, blogsAtStart.length - 1)
+
+  const ids = blogsAtEnd.map(b => b.id)
+  assert(!ids.includes(blogToDelete.id))
+})
+
 after(async () => {
   await mongoose.connection.close()
 })
