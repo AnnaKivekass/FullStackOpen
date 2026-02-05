@@ -21,6 +21,22 @@ describe('blog api', () => {
     await Blog.insertMany(initialBlogs)
   })
 
+test('if likes is missing, it defaults to 0', async () => {
+  const newBlog = {
+    title: 'no likes given',
+    author: 'someone',
+    url: 'https://example.com/nolikes'
+  }
+
+  const response = await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(201)
+    .expect('Content-Type', /application\/json/)
+
+  assert.strictEqual(response.body.likes, 0)
+})
+
   test('returns correct amount of blogs as JSON', async () => {
     const response = await api
       .get('/api/blogs')
