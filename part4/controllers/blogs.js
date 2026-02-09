@@ -18,14 +18,7 @@ blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
     return response.status(400).json({ error: 'title and url are required' })
   }
 
-  if (!request.user) {
-    return response.status(401).json({ error: 'token missing or invalid' })
-  }
-
-  const user = await User.findById(request.user.id)
-  if (!user) {
-    return response.status(401).json({ error: 'token user not found' })
-  }
+  const user = request.user
 
   const blog = new Blog({
     ...request.body,
@@ -41,22 +34,19 @@ blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
 })
 
 blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
-  if (!request.user) {
-    return response.status(401).json({ error: 'token missing or invalid' })
-  }
+  const user = request.user
 
   const blog = await Blog.findById(request.params.id)
   if (!blog) {
     return response.status(404).end()
   }
 
-  if (blog.user.toString() !== request.user.id.toString()) {
+  if (blog.user.toString() !== user._id.toString()) {
     return response.status(403).json({ error: 'only the creator can delete a blog' })
   }
 
   await Blog.findByIdAndDelete(request.params.id)
-
-  await User.findByIdAndUpdate(blog.user, { $pull: { blogs: blog._id } })
+  await User.findByIdAndUpdate(user._id, { $pull: { blogs: blog._id } })
 
   return response.status(204).end()
 })
