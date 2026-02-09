@@ -2,6 +2,7 @@ const { test, describe, beforeEach, after } = require('node:test')
 const assert = require('node:assert')
 const { default: expect } = require('expect')
 const supertest = require('supertest')
+const bcrypt = require('bcryptjs')
 
 const app = require('../app')
 const api = supertest(app)
@@ -17,16 +18,21 @@ const initialBlogs = [
 ]
 
 describe('blog api', () => {
+  let token
+  let userId
+
   beforeEach(async () => {
     await Blog.deleteMany({})
     await User.deleteMany({})
 
+    const passwordHash = await bcrypt.hash('salainen', 10)
     const user = new User({
       username: 'rootuser',
       name: 'Root',
-      passwordHash: 'fakehash',
+      passwordHash,
     })
     const savedUser = await user.save()
+    userId = savedUser._id.toString()
 
     const blogsWithUser = initialBlogs.map((b) => ({
       ...b,
@@ -37,6 +43,15 @@ describe('blog api', () => {
 
     savedUser.blogs = savedBlogs.map((b) => b._id)
     await savedUser.save()
+
+    const loginRes = await api
+      .post('/api/login')
+      .send({ username: 'rootuser', password: 'salainen' })
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    token = loginRes.body.token
+    expect(token).toBeDefined()
   })
 
   test('GET /api/blogs returns correct amount of blogs as JSON', async () => {
@@ -78,6 +93,7 @@ describe('blog api', () => {
 
     const created = await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -87,6 +103,11 @@ describe('blog api', () => {
     assert(blogsAtEnd.map((b) => b.title).includes(newBlog.title))
 
     expect(created.body.user).toBeDefined()
+    if (typeof created.body.user === 'string') {
+      expect(created.body.user).toBe(userId)
+    } else {
+      expect(created.body.user.id).toBe(userId)
+    }
   })
 
   test('if likes is missing, it defaults to 0', async () => {
@@ -98,6 +119,7 @@ describe('blog api', () => {
 
     const response = await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -116,6 +138,7 @@ describe('blog api', () => {
 
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(400)
 
@@ -134,6 +157,7 @@ describe('blog api', () => {
 
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(400)
 
@@ -173,6 +197,21 @@ describe('blog api', () => {
     const blogsAtEnd = (await api.get('/api/blogs')).body
     const updatedFromDb = blogsAtEnd.find((b) => b.id === blogToUpdate.id)
     assert.strictEqual(updatedFromDb.likes, updatedData.likes)
+  })
+
+  test('adding a blog fails with 401 if token is not provided', async () => {
+    const newBlog = {
+      title: 'no token',
+      author: 'x',
+      url: 'https://example.com',
+      likes: 1,
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
   })
 })
 
