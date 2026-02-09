@@ -40,12 +40,23 @@ blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
   response.status(201).json(savedBlog)
 })
 
-blogsRouter.delete('/:id', async (request, response) => {
-  const deleted = await Blog.findByIdAndDelete(request.params.id)
+blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
+  if (!request.user) {
+    return response.status(401).json({ error: 'token missing or invalid' })
+  }
 
-  if (!deleted) {
+  const blog = await Blog.findById(request.params.id)
+  if (!blog) {
     return response.status(404).end()
   }
+
+  if (blog.user.toString() !== request.user.id.toString()) {
+    return response.status(403).json({ error: 'only the creator can delete a blog' })
+  }
+
+  await Blog.findByIdAndDelete(request.params.id)
+
+  await User.findByIdAndUpdate(blog.user, { $pull: { blogs: blog._id } })
 
   return response.status(204).end()
 })

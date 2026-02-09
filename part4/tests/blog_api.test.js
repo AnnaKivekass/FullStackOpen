@@ -165,12 +165,13 @@ describe('blog api', () => {
     assert.strictEqual(blogsAtEnd.length, blogsAtStart.length)
   })
 
-  test('a blog can be deleted with DELETE /api/blogs/:id', async () => {
+  test('a blog can be deleted with DELETE /api/blogs/:id by the creator', async () => {
     const blogsAtStart = (await api.get('/api/blogs')).body
     const blogToDelete = blogsAtStart[0]
 
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(204)
 
     const blogsAtEnd = (await api.get('/api/blogs')).body
@@ -178,6 +179,54 @@ describe('blog api', () => {
 
     const ids = blogsAtEnd.map((b) => b.id)
     assert(!ids.includes(blogToDelete.id))
+  })
+
+  test('deleting a blog fails with 401 if token is not provided', async () => {
+    const blogsAtStart = (await api.get('/api/blogs')).body
+    const blogToDelete = blogsAtStart[0]
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
+  })
+
+  test('deleting a blog fails with 403 if token belongs to different user', async () => {
+    await api
+      .post('/api/users')
+      .send({ username: 'otheruser', name: 'Other', password: 'salainen2' })
+      .expect(201)
+
+    const loginRes2 = await api
+      .post('/api/login')
+      .send({ username: 'otheruser', password: 'salainen2' })
+      .expect(200)
+
+    const otherToken = loginRes2.body.token
+
+    const blogsAtStart = (await api.get('/api/blogs')).body
+    const blogToDelete = blogsAtStart[0]
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${otherToken}`)
+      .expect(403)
+      .expect('Content-Type', /application\/json/)
+  })
+
+  test('adding a blog fails with 401 if token is not provided', async () => {
+    const newBlog = {
+      title: 'no token',
+      author: 'x',
+      url: 'https://example.com',
+      likes: 1,
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
   })
 
   test('a blog likes can be updated with PUT /api/blogs/:id', async () => {
@@ -197,21 +246,6 @@ describe('blog api', () => {
     const blogsAtEnd = (await api.get('/api/blogs')).body
     const updatedFromDb = blogsAtEnd.find((b) => b.id === blogToUpdate.id)
     assert.strictEqual(updatedFromDb.likes, updatedData.likes)
-  })
-
-  test('adding a blog fails with 401 if token is not provided', async () => {
-    const newBlog = {
-      title: 'no token',
-      author: 'x',
-      url: 'https://example.com',
-      likes: 1,
-    }
-
-    await api
-      .post('/api/blogs')
-      .send(newBlog)
-      .expect(401)
-      .expect('Content-Type', /application\/json/)
   })
 })
 
