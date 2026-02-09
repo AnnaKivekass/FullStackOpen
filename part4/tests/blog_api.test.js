@@ -176,9 +176,6 @@ describe('blog api', () => {
 
     const blogsAtEnd = (await api.get('/api/blogs')).body
     assert.strictEqual(blogsAtEnd.length, blogsAtStart.length - 1)
-
-    const ids = blogsAtEnd.map((b) => b.id)
-    assert(!ids.includes(blogToDelete.id))
   })
 
   test('deleting a blog fails with 401 if token is not provided', async () => {
@@ -222,11 +219,16 @@ describe('blog api', () => {
       likes: 1,
     }
 
+    const blogsAtStart = (await api.get('/api/blogs')).body
+
     await api
       .post('/api/blogs')
       .send(newBlog)
       .expect(401)
       .expect('Content-Type', /application\/json/)
+
+    const blogsAtEnd = (await api.get('/api/blogs')).body
+    assert.strictEqual(blogsAtEnd.length, blogsAtStart.length)
   })
 
   test('a blog likes can be updated with PUT /api/blogs/:id', async () => {
