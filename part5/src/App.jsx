@@ -3,6 +3,7 @@ import blogService from './services/blogs'
 import loginService from './services/login'
 import LoginForm from './components/LoginForm'
 import Blog from './components/Blog'
+import BlogForm from './components/BlogForm'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -52,7 +53,16 @@ const App = () => {
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogappUser')
     setUser(null)
+    blogService.setToken(null) 
+  }
 
+  const createBlog = async (blogObject) => {
+    try {
+      const returnedBlog = await blogService.create(blogObject)
+      setBlogs(blogs.concat(returnedBlog))
+    } catch (e) {
+      console.log('blog creation failed', e?.response?.data || e)
+    }
   }
 
   if (user === null) {
@@ -74,6 +84,8 @@ const App = () => {
       <div>
         {user.name} logged in <button onClick={handleLogout}>logout</button>
       </div>
+
+      <BlogForm createBlog={createBlog} />
 
       {blogs.map((blog) => (
         <Blog key={blog.id} blog={blog} />
