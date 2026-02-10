@@ -81,11 +81,7 @@ const App = () => {
       blogFormRef.current.toggleVisibility()
     } catch (e) {
       notify('failed to create blog', 'error')
-      console.log(
-        'CREATE BLOG FAILED',
-        e?.response?.status,
-        e?.response?.data || e
-      )
+      console.log('CREATE BLOG FAILED', e?.response?.status, e?.response?.data || e)
     }
   }
 
@@ -113,12 +109,24 @@ const App = () => {
             : blog.user,
       }
 
-      setBlogs((prev) =>
-        prev.map((b) => (b.id === blogId ? blogForState : b))
-      )
+      setBlogs((prev) => prev.map((b) => (b.id === blogId ? blogForState : b)))
     } catch (e) {
       notify('failed to like blog', 'error')
       console.log('LIKE FAILED', e?.response?.status, e?.response?.data || e)
+    }
+  }
+
+  const removeBlog = async (blog) => {
+    const ok = window.confirm(`Remove blog ${blog.title} by ${blog.author}`)
+    if (!ok) return
+
+    try {
+      await blogService.remove(blog.id)
+      setBlogs((prev) => prev.filter((b) => b.id !== blog.id))
+      notify('blog removed', 'success')
+    } catch (e) {
+      notify('failed to remove blog', 'error')
+      console.log('REMOVE FAILED', e?.response?.status, e?.response?.data || e)
     }
   }
 
@@ -151,12 +159,17 @@ const App = () => {
         <BlogForm createBlog={createBlog} />
       </Togglable>
 
-     {[...blogs]
-  .sort((a, b) => b.likes - a.likes)
-  .map((blog) => (
-    <Blog key={blog.id} blog={blog} handleLike={likeBlog} />
-  ))}
- 
+      {[...blogs]
+        .sort((a, b) => b.likes - a.likes)
+        .map((blog) => (
+          <Blog
+            key={blog.id}
+            blog={blog}
+            handleLike={likeBlog}
+            handleRemove={removeBlog}
+            user={user}
+          />
+        ))}
     </div>
   )
 }
