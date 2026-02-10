@@ -19,13 +19,25 @@ const App = () => {
     fetchBlogs()
   }, [])
 
+  useEffect(() => {
+    const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
+    if (loggedUserJSON) {
+      const savedUser = JSON.parse(loggedUserJSON)
+      setUser(savedUser)
+      blogService.setToken(savedUser.token)
+    }
+  }, [])
+
   const handleLogin = async (event) => {
     event.preventDefault()
-    console.log('LOGIN CLICKED', username, password)
 
     try {
       const loggedUser = await loginService.login({ username, password })
-      console.log('LOGIN SUCCESS', loggedUser)
+
+      window.localStorage.setItem(
+        'loggedBlogappUser',
+        JSON.stringify(loggedUser)
+      )
 
       setUser(loggedUser)
       blogService.setToken(loggedUser.token)
@@ -35,6 +47,12 @@ const App = () => {
     } catch (e) {
       console.log('LOGIN FAILED', e?.response?.status, e?.response?.data || e)
     }
+  }
+
+  const handleLogout = () => {
+    window.localStorage.removeItem('loggedBlogappUser')
+    setUser(null)
+
   }
 
   if (user === null) {
@@ -52,11 +70,14 @@ const App = () => {
   return (
     <div>
       <h2>blogs</h2>
-      <div>{user.name} logged in</div>
 
-      {blogs.map(blog =>
+      <div>
+        {user.name} logged in <button onClick={handleLogout}>logout</button>
+      </div>
+
+      {blogs.map((blog) => (
         <Blog key={blog.id} blog={blog} />
-      )}
+      ))}
     </div>
   )
 }
