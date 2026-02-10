@@ -4,6 +4,7 @@ import loginService from './services/login'
 import LoginForm from './components/LoginForm'
 import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
+import Notification from './components/Notification'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
@@ -11,6 +12,13 @@ const App = () => {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+
+  const [message, setMessage] = useState(null)
+
+  const notify = (text, type = 'success') => {
+    setMessage({ text, type })
+    setTimeout(() => setMessage(null), 4000)
+  }
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -46,6 +54,7 @@ const App = () => {
       setUsername('')
       setPassword('')
     } catch (e) {
+      notify('wrong username or password', 'error')
       console.log('LOGIN FAILED', e?.response?.status, e?.response?.data || e)
     }
   }
@@ -53,32 +62,38 @@ const App = () => {
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogappUser')
     setUser(null)
-    blogService.setToken(null) 
+    blogService.setToken(null)
   }
 
   const createBlog = async (blogObject) => {
     try {
       const returnedBlog = await blogService.create(blogObject)
       setBlogs(blogs.concat(returnedBlog))
+      notify(`a new blog "${returnedBlog.title}" added`, 'success')
     } catch (e) {
-      console.log('blog creation failed', e?.response?.data || e)
+      notify('failed to create blog', 'error')
     }
   }
 
   if (user === null) {
     return (
-      <LoginForm
-        handleLogin={handleLogin}
-        username={username}
-        password={password}
-        setUsername={setUsername}
-        setPassword={setPassword}
-      />
+      <div>
+        <Notification message={message} />
+        <LoginForm
+          handleLogin={handleLogin}
+          username={username}
+          password={password}
+          setUsername={setUsername}
+          setPassword={setPassword}
+        />
+      </div>
     )
   }
 
   return (
     <div>
+      <Notification message={message} />
+
       <h2>blogs</h2>
 
       <div>
