@@ -25,8 +25,8 @@ const App = () => {
 
   useEffect(() => {
     const fetchBlogs = async () => {
-      const blogs = await blogService.getAll()
-      setBlogs(blogs)
+      const allBlogs = await blogService.getAll()
+      setBlogs(allBlogs)
     }
     fetchBlogs()
   }, [])
@@ -77,6 +77,7 @@ const App = () => {
       blogFormRef.current.toggleVisibility()
     } catch (e) {
       notify('failed to create blog', 'error')
+      console.log('CREATE BLOG FAILED', e?.response?.status, e?.response?.data || e)
     }
   }
 
