@@ -7,6 +7,8 @@ import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
 import Togglable from './components/Togglable'
 
+const normalizeBlog = (b) => ({ ...b, id: b.id || b._id })
+
 const App = () => {
   const [blogs, setBlogs] = useState([])
   const [user, setUser] = useState(null)
@@ -26,7 +28,7 @@ const App = () => {
   useEffect(() => {
     const fetchBlogs = async () => {
       const allBlogs = await blogService.getAll()
-      setBlogs(allBlogs)
+      setBlogs(allBlogs.map(normalizeBlog))
     }
     fetchBlogs()
   }, [])
@@ -71,13 +73,49 @@ const App = () => {
   const createBlog = async (blogObject) => {
     try {
       const returnedBlog = await blogService.create(blogObject)
-      setBlogs(blogs.concat(returnedBlog))
-      notify(`a new blog "${returnedBlog.title}" added`, 'success')
+      const normalized = normalizeBlog(returnedBlog)
+
+      setBlogs((prev) => prev.concat(normalized))
+      notify(`a new blog "${normalized.title}" added`, 'success')
 
       blogFormRef.current.toggleVisibility()
     } catch (e) {
       notify('failed to create blog', 'error')
-      console.log('CREATE BLOG FAILED', e?.response?.status, e?.response?.data || e)
+      console.log(
+        'CREATE BLOG FAILED',
+        e?.response?.status,
+        e?.response?.data || e
+      )
+    }
+  }
+
+  const likeBlog = async (blog) => {
+    try {
+      const blogId = blog.id || blog._id
+      const userId = blog.user?.id || blog.user?._id || blog.user
+
+      const updatedBlog = {
+        user: userId,
+        likes: blog.likes + 1,
+        author: blog.author,
+        title: blog.title,
+        url: blog.url,
+      }
+
+      const returnedBlog = await blogService.update(blogId, updatedBlog)
+      const normalizedReturned = normalizeBlog(returnedBlog)
+
+      const blogForState = {
+        ...normalizedReturned,
+        user: normalizedReturned.user ?? blog.user,
+      }
+
+      setBlogs((prev) =>
+        prev.map((b) => ((b.id || b._id) === blogId ? blogForState : b))
+      )
+    } catch (e) {
+      notify('failed to like blog', 'error')
+      console.log('LIKE FAILED', e?.response?.status, e?.response?.data || e)
     }
   }
 
@@ -111,7 +149,7 @@ const App = () => {
       </Togglable>
 
       {blogs.map((blog) => (
-        <Blog key={blog.id} blog={blog} />
+        <Blog key={blog.id || blog._id} blog={blog} handleLike={likeBlog} />
       ))}
     </div>
   )
