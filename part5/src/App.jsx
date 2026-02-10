@@ -107,11 +107,14 @@ const App = () => {
 
       const blogForState = {
         ...normalizedReturned,
-        user: normalizedReturned.user ?? blog.user,
+        user:
+          normalizedReturned.user && typeof normalizedReturned.user === 'object'
+            ? normalizedReturned.user
+            : blog.user,
       }
 
       setBlogs((prev) =>
-        prev.map((b) => ((b.id || b._id) === blogId ? blogForState : b))
+        prev.map((b) => (b.id === blogId ? blogForState : b))
       )
     } catch (e) {
       notify('failed to like blog', 'error')
@@ -149,7 +152,7 @@ const App = () => {
       </Togglable>
 
       {blogs.map((blog) => (
-        <Blog key={blog.id || blog._id} blog={blog} handleLike={likeBlog} />
+        <Blog key={blog.id} blog={blog} handleLike={likeBlog} />
       ))}
     </div>
   )
