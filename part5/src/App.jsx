@@ -48,10 +48,7 @@ const App = () => {
     try {
       const loggedUser = await loginService.login({ username, password })
 
-      window.localStorage.setItem(
-        'loggedBlogappUser',
-        JSON.stringify(loggedUser)
-      )
+      window.localStorage.setItem('loggedBlogappUser', JSON.stringify(loggedUser))
 
       setUser(loggedUser)
       blogService.setToken(loggedUser.token)
@@ -75,7 +72,19 @@ const App = () => {
       const returnedBlog = await blogService.create(blogObject)
       const normalized = normalizeBlog(returnedBlog)
 
-      setBlogs((prev) => prev.concat(normalized))
+      const blogForState = {
+        ...normalized,
+        user:
+          normalized.user && typeof normalized.user === 'object'
+            ? normalized.user
+            : {
+                username: user.username,
+                name: user.name,
+                id: user.id || user._id,
+              },
+      }
+
+      setBlogs((prev) => prev.concat(blogForState))
       notify(`a new blog "${normalized.title}" added`, 'success')
 
       blogFormRef.current.toggleVisibility()
