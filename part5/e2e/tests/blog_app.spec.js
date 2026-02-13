@@ -49,16 +49,39 @@ describe('Blog app', () => {
       await expect(page.getByText(/matti luukkainen.*logged in/i)).toBeVisible()
     })
 
-    test('a new blog can be created', async ({ page }) => {
-      await page.getByRole('button', { name: /new blog|create new|add blog/i }).click()
+    describe('and a blog exists', () => {
+      beforeEach(async ({ page }) => {
+        await page.getByRole('button', { name: /new blog|create new|add blog/i }).click()
 
-      await page.locator('#title').fill('Playwright blog')
-      await page.locator('#author').fill('E2E Tester')
-      await page.locator('#url').fill('https://example.com')
+        await page.locator('#title').fill('Playwright blog')
+        await page.locator('#author').fill('E2E Tester')
+        await page.locator('#url').fill('https://example.com')
 
-      await page.getByRole('button', { name: /create/i }).click()
+        await page.getByRole('button', { name: /create/i }).click()
 
-      await expect(page.getByText('Playwright blog E2E Tester')).toBeVisible()
+        // Ensure the blog card exists (avoid strict mode errors)
+        await expect(
+          page.locator('.blog').filter({ hasText: 'Playwright blog' }).first()
+        ).toBeVisible()
+      })
+
+      test('a new blog can be created', async ({ page }) => {
+        await expect(
+          page.locator('.blog').filter({ hasText: 'Playwright blog' }).first()
+        ).toBeVisible()
+      })
+
+      test('a blog can be liked', async ({ page }) => {
+        const blog = page
+          .locator('.blog')
+          .filter({ hasText: 'Playwright blog' })
+          .first()
+
+        await blog.getByRole('button', { name: /view/i }).click()
+        await blog.getByRole('button', { name: /like/i }).click()
+
+        await expect(blog.getByText(/likes\s*1/i)).toBeVisible()
+      })
     })
   })
 })
