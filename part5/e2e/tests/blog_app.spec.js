@@ -3,17 +3,18 @@ const { test, expect, beforeEach, describe } = require('@playwright/test')
 describe('Blog app', () => {
   beforeEach(async ({ page, request }) => {
     await request.post('http://localhost:3003/api/testing/reset')
+
     await request.post('http://localhost:3003/api/users', {
       data: {
         name: 'Matti Luukkainen',
         username: 'mluukkai',
-        password: 'salainen'
-      }
+        password: 'salainen',
+      },
     })
 
     await page.goto('http://localhost:5173')
     await page.evaluate(() => window.localStorage.clear())
-    await page.reload()
+    await page.goto('http://localhost:5173')
   })
 
   test('Login form is shown', async ({ page }) => {
@@ -29,7 +30,7 @@ describe('Blog app', () => {
       await page.locator('#password').fill('salainen')
       await page.getByRole('button', { name: /login/i }).click()
 
-      await expect(page.getByText(/matti luukkainen.*logged in/i)).toBeVisible()
+      await expect(page.getByRole('button', { name: /logout/i })).toBeVisible()
     })
 
     test('fails with wrong credentials', async ({ page }) => {
@@ -38,7 +39,7 @@ describe('Blog app', () => {
       await page.getByRole('button', { name: /login/i }).click()
 
       await expect(page.getByText(/wrong username or password/i)).toBeVisible()
-      await expect(page.getByText(/logged in/i)).not.toBeVisible()
+      await expect(page.getByRole('button', { name: /logout/i })).not.toBeVisible()
     })
   })
 
@@ -48,7 +49,7 @@ describe('Blog app', () => {
       await page.locator('#password').fill('salainen')
       await page.getByRole('button', { name: /login/i }).click()
 
-      await expect(page.getByText(/matti luukkainen.*logged in/i)).toBeVisible()
+      await expect(page.getByRole('button', { name: /logout/i })).toBeVisible()
     })
 
     describe('and a blog exists', () => {
@@ -58,11 +59,9 @@ describe('Blog app', () => {
         uniqueTitle = `Playwright blog ${Date.now()}`
 
         await page.getByRole('button', { name: /new blog|create new|add blog/i }).click()
-
         await page.locator('#title').fill(uniqueTitle)
         await page.locator('#author').fill('E2E Tester')
         await page.locator('#url').fill('https://example.com')
-
         await page.getByRole('button', { name: /create/i }).click()
 
         await expect(page.locator('.blog').filter({ hasText: uniqueTitle }).first()).toBeVisible()
@@ -92,7 +91,6 @@ describe('Blog app', () => {
 
       test('the user who created a blog can delete it', async ({ page }) => {
         const blog = page.locator('.blog').filter({ hasText: uniqueTitle }).first()
-        console.log(await page.getByRole('button').allTextContents())
 
         await blog.getByRole('button', { name: /view|show/i }).click()
 
@@ -100,9 +98,49 @@ describe('Blog app', () => {
           await dialog.accept()
         })
 
-        await page.getByRole('button', { name: /remove|delete/i }).click()
+        await blog.getByRole('button', { name: /remove/i }).click()
 
         await expect(page.locator('.blog').filter({ hasText: uniqueTitle })).toHaveCount(0)
+      })
+    })
+
+    describe('only creator can see remove button', () => {
+      beforeEach(async ({ request }) => {
+        await request.post('http://localhost:3003/api/users', {
+          data: {
+            name: 'Ada Lovelace',
+            username: 'ada',
+            password: 'salainen2',
+          },
+        })
+      })
+
+      test('only creator sees remove button', async ({ page }) => {
+        const uniqueTitle = `Creator-only blog ${Date.now()}`
+
+        await page.getByRole('button', { name: /new blog|create new|add blog/i }).click()
+        await page.locator('#title').fill(uniqueTitle)
+        await page.locator('#author').fill('E2E Tester')
+        await page.locator('#url').fill('https://example.com')
+        await page.getByRole('button', { name: /create/i }).click()
+
+        const blogAsCreator = page.locator('.blog').filter({ hasText: uniqueTitle }).first()
+        await blogAsCreator.getByRole('button', { name: /view|show/i }).click()
+
+        await expect(blogAsCreator.getByRole('button', { name: /remove/i })).toBeVisible()
+
+        await page.getByRole('button', { name: /logout/i }).click()
+        await expect(page.getByRole('button', { name: /login/i })).toBeVisible()
+
+        await page.locator('#username').fill('ada')
+        await page.locator('#password').fill('salainen2')
+        await page.getByRole('button', { name: /login/i }).click()
+        await expect(page.getByRole('button', { name: /logout/i })).toBeVisible()
+
+        const blogAsOtherUser = page.locator('.blog').filter({ hasText: uniqueTitle }).first()
+        await blogAsOtherUser.getByRole('button', { name: /view|show/i }).click()
+
+        await expect(blogAsOtherUser.getByRole('button', { name: /remove/i })).toHaveCount(0)
       })
     })
   })
