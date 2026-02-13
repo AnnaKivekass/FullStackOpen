@@ -6,6 +6,7 @@ const LoginForm = ({ handleLogin, username, password, setUsername, setPassword }
       <div>
         username
         <input
+          id="username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
@@ -14,6 +15,7 @@ const LoginForm = ({ handleLogin, username, password, setUsername, setPassword }
       <div>
         password
         <input
+          id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
