@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { vi } from 'vitest'
 import Blog from './Blog'
 
 describe('<Blog />', () => {
@@ -11,7 +12,7 @@ describe('<Blog />', () => {
     user: { username: 'anna', name: 'Anna' },
   }
 
-  test('renders title and author, but url and likes are hidden by default', () => {
+  test('renders title and author, but hides url and likes by default', () => {
     render(<Blog blog={blog} />)
 
     expect(screen.getByText(/Things I Don’t Know as of 2018/i)).toBeInTheDocument()
@@ -21,7 +22,7 @@ describe('<Blog />', () => {
     expect(screen.queryByText(/likes/i)).toBeNull()
   })
 
-  test('url, likes ja käyttäjä näytetään kun view-nappia painetaan', async () => {
+  test('shows url, likes and user after clicking the view button', async () => {
     render(<Blog blog={blog} />)
 
     const user = userEvent.setup()
@@ -29,9 +30,26 @@ describe('<Blog />', () => {
     await user.click(viewButton)
 
     expect(screen.getByText(blog.url)).toBeInTheDocument()
-
-    expect(screen.getByText(/likes\s*12/i)).toBeInTheDocument()
-
+    expect(
+      screen.getByText(new RegExp(`likes\\s*${blog.likes}`, 'i'))
+    ).toBeInTheDocument()
     expect(screen.getByText(blog.user.name)).toBeInTheDocument()
+  })
+
+  test('calls the like handler twice when like button is clicked twice', async () => {
+    const mockLikeHandler = vi.fn()
+
+    render(<Blog blog={blog} handleLike={mockLikeHandler} />)
+
+    const user = userEvent.setup()
+
+    const viewButton = screen.getByRole('button', { name: /view|show/i })
+    await user.click(viewButton)
+
+    const likeButton = screen.getByRole('button', { name: /like/i })
+    await user.click(likeButton)
+    await user.click(likeButton)
+
+    expect(mockLikeHandler).toHaveBeenCalledTimes(2)
   })
 })
