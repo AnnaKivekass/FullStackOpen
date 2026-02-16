@@ -9,24 +9,20 @@ const anecdotesAtStart = [
 
 const getId = () => (100000 * Math.random()).toFixed(0)
 
-const asObject = anecdote => {
-  return {
-    content: anecdote,
-    id: getId(),
-    votes: 0
-  }
-}
+const asObject = anecdote => ({
+  content: anecdote,
+  id: getId(),
+  votes: 0
+})
 
 const initialState = anecdotesAtStart.map(asObject)
 
-const reducer = (state = initialState, action) => {
+const anecdoteReducer = (state = initialState, action) => {
   switch (action.type) {
 
     case 'VOTE': {
-      const id = action.payload
-
       const updatedState = state.map(anecdote =>
-        anecdote.id !== id
+        anecdote.id !== action.payload
           ? anecdote
           : { ...anecdote, votes: anecdote.votes + 1 }
       )
@@ -39,9 +35,27 @@ const reducer = (state = initialState, action) => {
       return newState.sort((a, b) => b.votes - a.votes)
     }
 
-    default: 
+    default:
       return state
   }
 }
 
-export default reducer
+export default anecdoteReducer
+
+export const voteAnecdote = (id) => {
+  return {
+    type: 'VOTE',
+    payload: id
+  }
+}
+
+export const createAnecdote = (content) => {
+  return {
+    type: 'CREATE',
+    payload: {
+      content,
+      id: getId(),
+      votes: 0
+    }
+  }
+}
