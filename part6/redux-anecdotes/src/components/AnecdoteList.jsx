@@ -1,12 +1,21 @@
 import { useSelector, useDispatch } from 'react-redux'
-import { voteAnecdote } from '../reducers/anecdoteReducer'
+import { voteAnecdote, setAnecdotes } from '../reducers/anecdoteReducer'
 import { setNotificationWithTimeout } from '../reducers/notificationReducer'
+import { useEffect } from 'react'
 
 const AnecdoteList = () => {
   const dispatch = useDispatch()
 
   const anecdotes = useSelector(state => state.anecdotes)
   const filter = useSelector(state => state.filter)
+
+  useEffect(() => {
+    fetch('http://localhost:3001/anecdotes')
+      .then(response => response.json())
+      .then(data => {
+        dispatch(setAnecdotes(data))
+      })
+  }, [dispatch])
 
   const filteredAnecdotes = anecdotes.filter(anecdote =>
     anecdote.content.toLowerCase().includes(filter.toLowerCase())
