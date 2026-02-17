@@ -9,14 +9,6 @@ const AnecdoteList = () => {
   const anecdotes = useSelector(state => state.anecdotes)
   const filter = useSelector(state => state.filter)
 
-  useEffect(() => {
-    fetch('http://localhost:3001/anecdotes')
-      .then(response => response.json())
-      .then(data => {
-        dispatch(setAnecdotes(data))
-      })
-  }, [dispatch])
-
   const filteredAnecdotes = anecdotes.filter(anecdote =>
     anecdote.content.toLowerCase().includes(filter.toLowerCase())
   )

@@ -28,3 +28,10 @@ const anecdoteSlice = createSlice({
 
 export const { setAnecdotes, voteAnecdote, createAnecdote } = anecdoteSlice.actions
 export default anecdoteSlice.reducer
+export const initializeAnecdotes = () => {
+  return async dispatch => {
+    const response = await fetch('http://localhost:3001/anecdotes')
+    const data = await response.json()
+    dispatch(setAnecdotes(data))
+  }
+}
