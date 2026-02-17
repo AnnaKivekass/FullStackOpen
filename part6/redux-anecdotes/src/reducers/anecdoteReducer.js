@@ -9,16 +9,15 @@ const anecdoteSlice = createSlice({
       return action.payload
     },
 
-    voteAnecdote(state, action) {
-      const id = action.payload
-      const anecdoteToVote = state.find(a => a.id === id)
+    updateAnecdote(state, action) {
+      const updated = action.payload
 
-      anecdoteToVote.votes += 1
+      const index = state.findIndex(a => a.id === updated.id)
+      state[index] = updated
 
       state.sort((a, b) => b.votes - a.votes)
     },
 
-    
     appendAnecdote(state, action) {
       state.push(action.payload)
       state.sort((a, b) => b.votes - a.votes)
@@ -27,8 +26,14 @@ const anecdoteSlice = createSlice({
   }
 })
 
-export const { setAnecdotes, voteAnecdote, appendAnecdote } = anecdoteSlice.actions
+export const {
+  setAnecdotes,
+  appendAnecdote,
+  updateAnecdote
+} = anecdoteSlice.actions
+
 export default anecdoteSlice.reducer
+
 export const initializeAnecdotes = () => {
   return async dispatch => {
     const response = await fetch('http://localhost:3001/anecdotes')
@@ -45,16 +50,38 @@ export const createAnecdote = (content) => {
       votes: 0
     }
 
-    const response = await fetch('http://localhost:3001/anecdotes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(newAnecdote)
-    })
+    const response = await fetch(
+      'http://localhost:3001/anecdotes',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAnecdote)
+      }
+    )
 
     const savedAnecdote = await response.json()
-
     dispatch(appendAnecdote(savedAnecdote))
+  }
+}
+
+export const voteAnecdote = (anecdote) => {
+  return async dispatch => {
+
+    const updatedAnecdote = {
+      ...anecdote,
+      votes: anecdote.votes + 1
+    }
+
+    const response = await fetch(
+      `http://localhost:3001/anecdotes/${anecdote.id}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedAnecdote)
+      }
+    )
+
+    const savedAnecdote = await response.json()
+    dispatch(updateAnecdote(savedAnecdote))
   }
 }
