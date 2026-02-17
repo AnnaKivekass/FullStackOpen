@@ -11,26 +11,11 @@ const AnecdoteForm = () => {
     const content = event.target.anecdote.value
     event.target.anecdote.value = ''
 
-    const newAnecdote = {
-      content,
-      votes: 0
-    }
-
-    fetch('http://localhost:3001/anecdotes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(newAnecdote)
-    })
-      .then(response => response.json())
-      .then(savedAnecdote => {
-        dispatch(createAnecdote(savedAnecdote))
-        dispatch(setNotificationWithTimeout(
-          `you created '${content}'`,
-          5
-        ))
-      })
+    dispatch(createAnecdote(content))
+    dispatch(setNotificationWithTimeout(
+      `you created '${content}'`,
+      5
+    ))
   }
 
   return (
