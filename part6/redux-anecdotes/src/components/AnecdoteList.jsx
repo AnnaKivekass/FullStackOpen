@@ -1,12 +1,23 @@
-import { useQuery } from '@tanstack/react-query'
-import { getAnecdotes } from '../services/anecdotes'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSelector } from 'react-redux'
+import { getAnecdotes, updateAnecdote } from '../services/anecdotes'
 
 const AnecdoteList = () => {
+
+  const queryClient = useQueryClient()
+  const filter = useSelector(state => state.filter)
 
   const result = useQuery({
     queryKey: ['anecdotes'],
     queryFn: getAnecdotes,
     retry: false
+  })
+
+  const voteMutation = useMutation({
+    mutationFn: updateAnecdote,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['anecdotes'])
+    }
   })
 
   if (result.isLoading) {
@@ -21,14 +32,32 @@ const AnecdoteList = () => {
     )
   }
 
-  const anecdotes = result.data
+  const anecdotes = [...result.data].sort(
+  (a, b) => b.votes - a.votes
+)
+
+  const filteredAnecdotes = anecdotes.filter(anecdote =>
+    anecdote.content.toLowerCase().includes(filter.toLowerCase())
+  )
+
+  const vote = (anecdote) => {
+    voteMutation.mutate({
+      ...anecdote,
+      votes: anecdote.votes + 1
+    })
+  }
 
   return (
     <div>
-      {anecdotes.map(anecdote => (
+      {filteredAnecdotes.map(anecdote => (
         <div key={anecdote.id}>
           <div>{anecdote.content}</div>
-          <div>has {anecdote.votes}</div>
+          <div>
+            has {anecdote.votes}
+            <button onClick={() => vote(anecdote)}>
+              vote
+            </button>
+          </div>
         </div>
       ))}
     </div>
