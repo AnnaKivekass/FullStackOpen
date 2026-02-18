@@ -16,7 +16,7 @@ const AnecdoteList = () => {
   const voteMutation = useMutation({
     mutationFn: updateAnecdote,
     onSuccess: () => {
-      queryClient.invalidateQueries(['anecdotes'])
+      queryClient.invalidateQueries({ queryKey: ['anecdotes'] })
     }
   })
 
@@ -32,9 +32,8 @@ const AnecdoteList = () => {
     )
   }
 
-  const anecdotes = [...result.data].sort(
-  (a, b) => b.votes - a.votes
-)
+  const anecdotes = [...result.data]
+    .sort((a, b) => b.votes - a.votes)
 
   const filteredAnecdotes = anecdotes.filter(anecdote =>
     anecdote.content.toLowerCase().includes(filter.toLowerCase())
