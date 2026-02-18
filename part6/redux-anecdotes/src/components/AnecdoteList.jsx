@@ -1,36 +1,34 @@
-import { useSelector, useDispatch } from 'react-redux'
-import { voteAnecdote } from '../reducers/anecdoteReducer'
-import { setNotification } from '../reducers/notificationReducer'
+import { useQuery } from '@tanstack/react-query'
+import { getAnecdotes } from '../services/anecdotes'
 
 const AnecdoteList = () => {
-  const dispatch = useDispatch()
 
-  const anecdotes = useSelector(state => state.anecdotes)
-  const filter = useSelector(state => state.filter)
+  const result = useQuery({
+    queryKey: ['anecdotes'],
+    queryFn: getAnecdotes,
+    retry: false
+  })
 
-  const filteredAnecdotes = anecdotes.filter(anecdote =>
-    anecdote.content.toLowerCase().includes(filter.toLowerCase())
-  )
-
-  const vote = (anecdote) => {
-    dispatch(voteAnecdote(anecdote))
-    dispatch(setNotification(
-      `you voted '${anecdote.content}'`,
-      5
-    ))
+  if (result.isLoading) {
+    return <div>loading data...</div>
   }
+
+  if (result.isError) {
+    return (
+      <div>
+        anecdote service not available due to problems in server
+      </div>
+    )
+  }
+
+  const anecdotes = result.data
 
   return (
     <div>
-      {filteredAnecdotes.map(anecdote => (
+      {anecdotes.map(anecdote => (
         <div key={anecdote.id}>
           <div>{anecdote.content}</div>
-          <div>
-            has {anecdote.votes}
-            <button onClick={() => vote(anecdote)}>
-              vote
-            </button>
-          </div>
+          <div>has {anecdote.votes}</div>
         </div>
       ))}
     </div>
