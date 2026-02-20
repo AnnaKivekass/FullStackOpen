@@ -6,6 +6,11 @@ import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
 import Togglable from './components/Togglable'
+import { useDispatch } from 'react-redux'
+import {
+  setNotification,
+  clearNotification
+} from './reducers/notificationReducer'
 
 const normalizeBlog = (b) => ({ ...b, id: b.id || b._id })
 
@@ -16,13 +21,15 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
-  const [message, setMessage] = useState(null)
+  const dispatch = useDispatch()
 
   const blogFormRef = useRef()
 
   const notify = (text, type = 'success') => {
-    setMessage({ text, type })
-    setTimeout(() => setMessage(null), 4000)
+    dispatch(setNotification({ text, type }))
+    setTimeout(() => {
+      dispatch(clearNotification())
+    }, 4000)
   }
 
   useEffect(() => {
@@ -125,7 +132,9 @@ const App = () => {
             : blog.user
       }
 
-      setBlogs((prev) => prev.map((b) => (b.id === blogId ? blogForState : b)))
+      setBlogs((prev) =>
+        prev.map((b) => (b.id === blogId ? blogForState : b))
+      )
     } catch (e) {
       notify('failed to like blog', 'error')
       console.log('LIKE FAILED', e?.response?.status, e?.response?.data || e)
@@ -133,7 +142,9 @@ const App = () => {
   }
 
   const removeBlog = async (blog) => {
-    const ok = window.confirm(`Remove blog ${blog.title} by ${blog.author}`)
+    const ok = window.confirm(
+      `Remove blog ${blog.title} by ${blog.author}`
+    )
     if (!ok) return
 
     try {
@@ -149,7 +160,7 @@ const App = () => {
   if (user === null) {
     return (
       <div>
-        <Notification message={message} />
+        <Notification />
         <LoginForm
           handleLogin={handleLogin}
           username={username}
@@ -163,12 +174,13 @@ const App = () => {
 
   return (
     <div>
-      <Notification message={message} />
+      <Notification />
 
       <h2>blogs</h2>
 
       <div>
-        {user.name} logged in <button onClick={handleLogout}>logout</button>
+        {user.name} logged in{' '}
+        <button onClick={handleLogout}>logout</button>
       </div>
 
       <Togglable buttonLabel="create new blog" ref={blogFormRef}>
