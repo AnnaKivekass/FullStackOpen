@@ -4,6 +4,7 @@ import AnecdoteList from "./components/AnecdoteList"
 import CreateNew from "./components/CreateNew"
 import Footer from "./components/Footer"
 import Menu from "./components/Menu"
+import Anecdote from "./components/Anecdote"
 
 const App = () => {
   const [anecdotes, setAnecdotes] = useState([
@@ -24,8 +25,11 @@ const App = () => {
   ])
 
   const addNew = (anecdote) => {
-    anecdote.id = anecdotes.length + 1
-    setAnecdotes(anecdotes.concat(anecdote))
+    const newAnecdote = {
+      ...anecdote,
+      id: anecdotes.length + 1
+    }
+    setAnecdotes(anecdotes.concat(newAnecdote))
   }
 
   return (
@@ -36,8 +40,20 @@ const App = () => {
         <Menu />
 
         <Routes>
-          <Route path="/" element={<AnecdoteList anecdotes={anecdotes} />} />
-          <Route path="/create" element={<CreateNew addNew={addNew} />} />
+          <Route
+            path="/"
+            element={<AnecdoteList anecdotes={anecdotes} />}
+          />
+
+          <Route
+            path="/create"
+            element={<CreateNew addNew={addNew} />}
+          />
+
+          <Route
+            path="/anecdotes/:id"
+            element={<Anecdote anecdotes={anecdotes} />}
+          />
         </Routes>
 
         <Footer />
