@@ -8,7 +8,7 @@ const Notification = ({ message }) => {
     borderStyle: 'solid',
     borderRadius: 5,
     padding: 10,
-    marginBottom: 10,
+    marginBottom: 10
   }
 
   return <div style={style}>{message.text}</div>

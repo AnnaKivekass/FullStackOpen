@@ -5,17 +5,19 @@ import Blog from './Blog'
 
 describe('<Blog />', () => {
   const blog = {
-    title: "Things I Don’t Know as of 2018",
+    title: 'Things I Don’t Know as of 2018',
     author: 'Dan Abramov',
     url: 'https://overreacted.io/things-i-dont-know-as-of-2018/',
     likes: 12,
-    user: { username: 'anna', name: 'Anna' },
+    user: { username: 'anna', name: 'Anna' }
   }
 
   test('renders title and author, but hides url and likes by default', () => {
     render(<Blog blog={blog} />)
 
-    expect(screen.getByText(/Things I Don’t Know as of 2018/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Things I Don’t Know as of 2018/i)
+    ).toBeInTheDocument()
     expect(screen.getByText(/Dan Abramov/i)).toBeInTheDocument()
 
     expect(screen.queryByText(blog.url)).toBeNull()

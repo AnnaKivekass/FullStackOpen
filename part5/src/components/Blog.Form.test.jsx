@@ -24,6 +24,6 @@ test('calls createBlog with correct data when a new blog is created', async () =
   expect(mockCreateBlog).toHaveBeenCalledWith({
     title: 'Test title',
     author: 'Test author',
-    url: 'https://example.com',
+    url: 'https://example.com'
   })
 })

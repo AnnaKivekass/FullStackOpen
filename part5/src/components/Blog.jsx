@@ -8,13 +8,13 @@ const Blog = ({ blog, handleLike, handleRemove, user }) => {
     paddingLeft: 2,
     border: 'solid',
     borderWidth: 1,
-    marginBottom: 5,
+    marginBottom: 5
   }
 
   const toggleVisibility = () => {
     setVisible(!visible)
   }
-  
+
   const ownerUsername = blog.user?.username
   const ownerId = blog.user?.id || blog.user?._id || blog.user
   const currentUserId = user?.id || user?._id

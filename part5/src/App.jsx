@@ -48,7 +48,10 @@ const App = () => {
     try {
       const loggedUser = await loginService.login({ username, password })
 
-      window.localStorage.setItem('loggedBlogappUser', JSON.stringify(loggedUser))
+      window.localStorage.setItem(
+        'loggedBlogappUser',
+        JSON.stringify(loggedUser)
+      )
 
       setUser(loggedUser)
       blogService.setToken(loggedUser.token)
@@ -80,8 +83,8 @@ const App = () => {
             : {
                 username: user.username,
                 name: user.name,
-                id: user.id || user._id,
-              },
+                id: user.id || user._id
+              }
       }
 
       setBlogs((prev) => prev.concat(blogForState))
@@ -90,7 +93,11 @@ const App = () => {
       blogFormRef.current.toggleVisibility()
     } catch (e) {
       notify('failed to create blog', 'error')
-      console.log('CREATE BLOG FAILED', e?.response?.status, e?.response?.data || e)
+      console.log(
+        'CREATE BLOG FAILED',
+        e?.response?.status,
+        e?.response?.data || e
+      )
     }
   }
 
@@ -104,7 +111,7 @@ const App = () => {
         likes: blog.likes + 1,
         author: blog.author,
         title: blog.title,
-        url: blog.url,
+        url: blog.url
       }
 
       const returnedBlog = await blogService.update(blogId, updatedBlog)
@@ -115,7 +122,7 @@ const App = () => {
         user:
           normalizedReturned.user && typeof normalizedReturned.user === 'object'
             ? normalizedReturned.user
-            : blog.user,
+            : blog.user
       }
 
       setBlogs((prev) => prev.map((b) => (b.id === blogId ? blogForState : b)))
