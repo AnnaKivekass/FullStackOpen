@@ -27,6 +27,10 @@ const CreateNew = ({ addNew }) => {
     info.reset()
   }
 
+  const { reset: resetContent, ...contentInput } = content
+  const { reset: resetAuthor, ...authorInput } = author
+  const { reset: resetInfo, ...infoInput } = info
+
   return (
     <div>
       <h2>Create a new anecdote</h2>
@@ -34,25 +38,26 @@ const CreateNew = ({ addNew }) => {
       <form onSubmit={handleSubmit}>
         <div>
           content
-          <input type={content.type} value={content.value} onChange={content.onChange} />
+          <input {...contentInput} />
         </div>
 
         <div>
           author
-          <input type={author.type} value={author.value} onChange={author.onChange} />
+          <input {...authorInput} />
         </div>
 
         <div>
           url for more info
-          <input type={info.type} value={info.value} onChange={info.onChange} />
+          <input {...infoInput} />
         </div>
 
         <button type="submit">create</button>
-        <button type="button" onClick={handleReset}>reset</button>
+        <button type="button" onClick={handleReset}>
+          reset
+        </button>
       </form>
     </div>
   )
 }
 
 export default CreateNew
-
