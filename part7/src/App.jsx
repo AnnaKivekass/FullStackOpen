@@ -24,12 +24,21 @@ const App = () => {
     }
   ])
 
+  const [notification, setNotification] = useState("")
+
   const addNew = (anecdote) => {
     const newAnecdote = {
       ...anecdote,
       id: anecdotes.length + 1
     }
+
     setAnecdotes(anecdotes.concat(newAnecdote))
+
+    setNotification(`a new anecdote "${newAnecdote.content}" created!`)
+
+    setTimeout(() => {
+      setNotification("")
+    }, 5000)
   }
 
   return (
@@ -39,17 +48,21 @@ const App = () => {
 
         <Menu />
 
+        {notification && (
+          <div style={{ border: "1px solid green", padding: "10px", margin: "10px 0" }}>
+            {notification}
+          </div>
+        )}
+
         <Routes>
           <Route
             path="/"
             element={<AnecdoteList anecdotes={anecdotes} />}
           />
-
           <Route
             path="/create"
             element={<CreateNew addNew={addNew} />}
           />
-
           <Route
             path="/anecdotes/:id"
             element={<Anecdote anecdotes={anecdotes} />}
