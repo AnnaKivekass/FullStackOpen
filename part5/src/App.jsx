@@ -6,7 +6,7 @@ import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
 import Togglable from './components/Togglable'
-import { useSelector, useDispatch } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux' // nyt se redux
 import {
   setNotification,
   clearNotification
@@ -28,21 +28,19 @@ const App = () => {
 
   const notify = (text, type = 'success') => {
     dispatch(setNotification({ text, type }))
-    setTimeout(() => {
-      dispatch(clearNotification())
-    }, 4000)
+    setTimeout(() => dispatch(clearNotification()), 4000)
   }
 
   useEffect(() => {
     dispatch(initializeBlogs())
-  }, [dispatch])
+  }, [dispatch]) // backend
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
     if (loggedUserJSON) {
       const savedUser = JSON.parse(loggedUserJSON)
       setUser(savedUser)
-      blogService.setToken(savedUser.token) // 🔥 tärkeä
+      blogService.setToken(savedUser.token) //?? miks nyt
     }
   }, [])
 
@@ -58,7 +56,7 @@ const App = () => {
       )
 
       setUser(loggedUser)
-      blogService.setToken(loggedUser.token) // 🔥 tärkeä
+      blogService.setToken(loggedUser.token)
 
       setUsername('')
       setPassword('')
@@ -83,7 +81,7 @@ const App = () => {
     }
   }
 
-  if (user === null) {
+  if (!user) {
     return (
       <div>
         <Notification />
@@ -123,7 +121,6 @@ const App = () => {
             handleRemove={() => {}}
             user={user}
           />
-
         ))}
     </div>
   )
