@@ -6,22 +6,23 @@ import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
 import Togglable from './components/Togglable'
-import { useDispatch } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import {
   setNotification,
   clearNotification
 } from './reducers/notificationReducer'
-
-const normalizeBlog = (b) => ({ ...b, id: b.id || b._id })
+import {
+  initializeBlogs,
+  createBlogRedux
+} from './reducers/blogReducer'
 
 const App = () => {
-  const [blogs, setBlogs] = useState([])
-  const [user, setUser] = useState(null)
+  const blogs = useSelector((state) => state.blogs)
+  const dispatch = useDispatch()
 
+  const [user, setUser] = useState(null)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-
-  const dispatch = useDispatch()
 
   const blogFormRef = useRef()
 
@@ -33,19 +34,15 @@ const App = () => {
   }
 
   useEffect(() => {
-    const fetchBlogs = async () => {
-      const allBlogs = await blogService.getAll()
-      setBlogs(allBlogs.map(normalizeBlog))
-    }
-    fetchBlogs()
-  }, [])
+    dispatch(initializeBlogs())
+  }, [dispatch])
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
     if (loggedUserJSON) {
       const savedUser = JSON.parse(loggedUserJSON)
       setUser(savedUser)
-      blogService.setToken(savedUser.token)
+      blogService.setToken(savedUser.token) // 🔥 tärkeä
     }
   }, [])
 
@@ -61,13 +58,12 @@ const App = () => {
       )
 
       setUser(loggedUser)
-      blogService.setToken(loggedUser.token)
+      blogService.setToken(loggedUser.token) // 🔥 tärkeä
 
       setUsername('')
       setPassword('')
     } catch (e) {
       notify('wrong username or password', 'error')
-      console.log('LOGIN FAILED', e?.response?.status, e?.response?.data || e)
     }
   }
 
@@ -79,81 +75,11 @@ const App = () => {
 
   const createBlog = async (blogObject) => {
     try {
-      const returnedBlog = await blogService.create(blogObject)
-      const normalized = normalizeBlog(returnedBlog)
-
-      const blogForState = {
-        ...normalized,
-        user:
-          normalized.user && typeof normalized.user === 'object'
-            ? normalized.user
-            : {
-                username: user.username,
-                name: user.name,
-                id: user.id || user._id
-              }
-      }
-
-      setBlogs((prev) => prev.concat(blogForState))
-      notify(`a new blog "${normalized.title}" added`, 'success')
-
+      await dispatch(createBlogRedux(blogObject))
+      notify(`a new blog "${blogObject.title}" added`, 'success')
       blogFormRef.current.toggleVisibility()
     } catch (e) {
       notify('failed to create blog', 'error')
-      console.log(
-        'CREATE BLOG FAILED',
-        e?.response?.status,
-        e?.response?.data || e
-      )
-    }
-  }
-
-  const likeBlog = async (blog) => {
-    try {
-      const blogId = blog.id || blog._id
-      const userId = blog.user?.id || blog.user?._id || blog.user
-
-      const updatedBlog = {
-        user: userId,
-        likes: blog.likes + 1,
-        author: blog.author,
-        title: blog.title,
-        url: blog.url
-      }
-
-      const returnedBlog = await blogService.update(blogId, updatedBlog)
-      const normalizedReturned = normalizeBlog(returnedBlog)
-
-      const blogForState = {
-        ...normalizedReturned,
-        user:
-          normalizedReturned.user && typeof normalizedReturned.user === 'object'
-            ? normalizedReturned.user
-            : blog.user
-      }
-
-      setBlogs((prev) =>
-        prev.map((b) => (b.id === blogId ? blogForState : b))
-      )
-    } catch (e) {
-      notify('failed to like blog', 'error')
-      console.log('LIKE FAILED', e?.response?.status, e?.response?.data || e)
-    }
-  }
-
-  const removeBlog = async (blog) => {
-    const ok = window.confirm(
-      `Remove blog ${blog.title} by ${blog.author}`
-    )
-    if (!ok) return
-
-    try {
-      await blogService.remove(blog.id)
-      setBlogs((prev) => prev.filter((b) => b.id !== blog.id))
-      notify('blog removed', 'success')
-    } catch (e) {
-      notify('failed to remove blog', 'error')
-      console.log('REMOVE FAILED', e?.response?.status, e?.response?.data || e)
     }
   }
 
@@ -191,12 +117,13 @@ const App = () => {
         .sort((a, b) => b.likes - a.likes)
         .map((blog) => (
           <Blog
-            key={blog.id}
+            key={blog.id || blog._id}
             blog={blog}
-            handleLike={likeBlog}
-            handleRemove={removeBlog}
+            handleLike={() => {}}
+            handleRemove={() => {}}
             user={user}
           />
+
         ))}
     </div>
   )
